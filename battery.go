@@ -14,6 +14,15 @@ type Battery struct {
 	floorRequestButtonList    []FloorRequestButton
 }
 
+func contains(s []int, e int) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
 func NewBattery(_id, _amountOfColumns, _amountOfFloors, _amountOfBasements, _amountOfElevatorPerColumn int) *Battery {
 	return &Battery{
 		ID:                        _id,
