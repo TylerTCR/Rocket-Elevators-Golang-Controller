@@ -29,51 +29,48 @@ func NewElevator(_elevatorID string) *Elevator {
 
 func (elev *Elevator) move() {
 	// While the elevator's floor request list is not empty
-	if len(elev.floorRequestsList) != 0 {
-		destination := elev.floorRequestsList[0]
-		// Loop until all floors in the list have been gone through
-		for i := 0; i < len(elev.floorRequestsList); i++ {
-			// If the elevator's current floor is lower than the destination
-			if elev.currentFloor < destination {
-				elev.direction = "up"
-				elev.sortFloorList(elev.floorRequestsList)
-				if elev.door.status == "opened" {
-					elev.door.status = "closed"
-				}
-				elev.status = "moving"
-
-				// Move the elevator until it reaches the floor
-				for j := elev.currentFloor; j < destination; j++ {
-					elev.currentFloor++
-					fmt.Printf("Floor: %d", elev.currentFloor)
-				}
-				// If the elevator's current floor is higher than the destination
-			} else if elev.currentFloor > destination {
-				elev.direction = "down"
-				elev.sortFloorList(elev.floorRequestsList)
-				if elev.door.status == "opened" {
-					elev.door.status = "closed"
-				}
-				elev.status = "moving"
-
-				// Move the elevator until it reaches the floor
-				for j := elev.currentFloor; j > destination; j++ {
-					elev.currentFloor--
-					fmt.Printf("Floor: %d", elev.currentFloor)
-				}
+	for len(elev.floorRequestsList) != 0 {
+		// Creating a temp array to sort later; this array is used to move the elevator
+		tempRequestList := []int{len(elev.floorRequestsList)}
+		// Copying the elevator's floor request list so the original list is untouched when sorted
+		copy(tempRequestList, elev.floorRequestsList)
+		destination := tempRequestList[0]
+		
+		// If the elevator's current floor is lower than the destination
+		if elev.direction == "up" {
+			elev.sortFloorList(tempRequestList)
+			if elev.door.status == "opened" {
+				elev.door.status = "closed"
 			}
-			// Set elevator's status to stopped
-			elev.status = "stopped"
-			// Open the doors
-			elev.door.status = "opened"
-			// Add the destination to completed request list
-			elev.completedRequestsList = append(elev.completedRequestsList, destination)
-			// Remove the first element in the request list, keeping the order of the list
-			r := 0 // Element to remove
-			copy(elev.floorRequestsList[r:], elev.floorRequestsList[r+1:])
-			elev.floorRequestsList[len(elev.floorRequestsList)-1] = 0
-			elev.floorRequestsList = elev.floorRequestsList[:len(elev.floorRequestsList)-1]
+			elev.status = "moving"
+
+			// Move the elevator until it reaches the floor
+			for elev.currentFloor < destination {
+				elev.currentFloor++
+				fmt.Printf("Floor: %d\n", elev.currentFloor)
+			}
+			// If the elevator's current floor is higher than the destination
+		} else if elev.direction == "down" {
+			elev.sortFloorList(tempRequestList)
+			if elev.door.status == "opened" {
+				elev.door.status = "closed"
+			}
+			elev.status = "moving"
+
+			// Move the elevator until it reaches the floor
+			for elev.currentFloor > destination {
+				elev.currentFloor--
+				fmt.Printf("Floor: %d\n", elev.currentFloor)
+			}
 		}
+		// Set elevator's status to stopped
+		elev.status = "stopped"
+		// Open the doors
+		elev.door.status = "opened"
+		// Add the destination to completed request list
+		elev.completedRequestsList = append(elev.completedRequestsList, destination)
+		// Remove the first element in the request list, keeping the order of the list
+		elev.floorRequestsList = elev.floorRequestsList[1:]
 	}
 }
 

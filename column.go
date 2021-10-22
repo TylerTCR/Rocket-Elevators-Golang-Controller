@@ -1,6 +1,9 @@
 package main
 
-import "math"
+import (
+	"math"
+	"strconv"
+)
 
 type Column struct {
 	ID            string
@@ -10,12 +13,6 @@ type Column struct {
 	elevatorsList []Elevator
 	callButtons   []CallButton
 }
-
-// type BestElevInfo struct {
-// 	bestElevator Elevator
-// 	bestScore    int
-// 	referenceGap int
-// }
 
 func NewColumn(_id string, _amountOfElevators int, _servedFloors []int, _isBasement bool) *Column {
 	return &Column{
@@ -59,7 +56,7 @@ func createElevators(servedFloors []int, amountOfElevators int) []Elevator {
 	elevatorID := 1
 	elevList := []Elevator{}
 	for i := 0; i < amountOfElevators; i++ {
-		elevator := NewElevator(string(elevatorID))
+		elevator := NewElevator(strconv.Itoa(elevatorID))
 		elevList = append(elevList, *elevator)
 		elevatorID++
 	}
@@ -85,67 +82,60 @@ func (c *Column) requestElevator(_requestedFloor int, _direction string) *Elevat
 /* Find the best elevator, prioritizing ones already in motion, heading the same way of the user wants to go,
 and closest to the floor where the user is on. */
 func (c *Column) findElevator(requestedFloor int, direction string) *Elevator {
-	bestElevator := Elevator{}
+	bestElevator := &c.elevatorsList[0]
 	bestScore := 100
 	referenceGap := 100000
-	// bestElevatorInformations := BestElevInfo{
-	// 	bestElevator: Elevator{},
-	// 	bestScore:    100,
-	// 	referenceGap: 100000,
-	// }
 
 	// If requestedFloor is the lobby
 	if requestedFloor == 1 {
-		for _, elevator := range c.elevatorsList {
+		for i:=0 ; i < len(c.elevatorsList); i++ {
 			// Elevator is stopped at the lobby and already has requests
-			if elevator.currentFloor == 1 && elevator.status == "stopped" {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(1, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+			if c.elevatorsList[i].currentFloor == 1 && c.elevatorsList[i].status == "stopped" {
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(1, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 				// Elevator is idle at the lobby, has no requests
-			} else if elevator.currentFloor == 1 && elevator.status == "idle" {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(2, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+			} else if c.elevatorsList[i].currentFloor == 1 && c.elevatorsList[i].status == "idle" {
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(2, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 				// Elevator is lower than the user and coming up
-			} else if elevator.currentFloor < 1 && elevator.direction == "up" {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(2, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+			} else if c.elevatorsList[i].currentFloor < 1 && c.elevatorsList[i].direction == "up" {
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(2, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 				// Elevator is above the user and coming down
-			} else if elevator.currentFloor > 1 && elevator.direction == "down" {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(3, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+			} else if c.elevatorsList[i].currentFloor > 1 && c.elevatorsList[i].direction == "down" {
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(3, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 				// Elevator is not at the lobby, but is idle and has no requests
-			} else if elevator.status == "idle" {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(4, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+			} else if c.elevatorsList[i].status == "idle" {
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(4, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 				// Elevator is not available, but could take the request if there's nothing better
 			} else {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(5, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(5, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 			}
 
 		} // End for loop
-		// If requested floor is not the lobby...
+	// If requested floor is not the lobby...
 	} else {
-		for _, elevator := range c.elevatorsList {
+		for i:=0 ; i < len(c.elevatorsList); i++ {
 			// Elevator is stopped at the same level as user, about to go to lobby
-			if elevator.currentFloor == requestedFloor && elevator.status == "stopped" && elevator.direction == direction {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(1, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+			if c.elevatorsList[i].currentFloor == requestedFloor && c.elevatorsList[i].status == "stopped" && c.elevatorsList[i].direction == direction {
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(1, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 				// Elevator is lower than user, and going up towards the lobby
-			} else if elevator.currentFloor < requestedFloor && elevator.direction == "up" && elevator.direction == direction {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(2, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+			} else if c.elevatorsList[i].currentFloor < requestedFloor && c.elevatorsList[i].direction == "up" && c.elevatorsList[i].direction == direction {
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(2, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 				// Elevator is above user and going down towards the lobby
-			} else if elevator.currentFloor > requestedFloor && elevator.direction == "down" && elevator.direction == direction {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(2, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+			} else if c.elevatorsList[i].currentFloor > requestedFloor && c.elevatorsList[i].direction == "down" && c.elevatorsList[i].direction == direction {
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(2, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 				// Elevator is idle
-			} else if elevator.status == "idle" {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(4, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+			} else if c.elevatorsList[i].status == "idle" {
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(4, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 				// Elevator is not available but can still take the request
 			} else {
-				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(5, elevator, bestScore, referenceGap, bestElevator, requestedFloor)
+				bestElevator, bestScore, referenceGap = c.checkIfElevatorIsBetter(5, &c.elevatorsList[i], bestScore, referenceGap, bestElevator, requestedFloor)
 			}
-
-			// Not done...
 		}
 	}
 
-	return &bestElevator
+	return bestElevator
 }
 
-func (c *Column /*, b *BestElevInfo*/) checkIfElevatorIsBetter(scoreToCheck int, newElevator Elevator, bestScore int, referenceGap int, bestElevator Elevator, floor int) (Elevator, int, int) {
+func (c *Column) checkIfElevatorIsBetter(scoreToCheck int, newElevator *Elevator, bestScore int, referenceGap int, bestElevator *Elevator, floor int) (*Elevator, int, int) {
 	if scoreToCheck < bestScore {
 		bestScore = scoreToCheck
 		bestElevator = newElevator

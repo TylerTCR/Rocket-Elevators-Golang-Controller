@@ -1,10 +1,12 @@
 package main
 
-import "math"
+import (
+	"math"
+	"strconv"
+)
 
 type Battery struct {
 	ID                        int
-	columnID                  int
 	amountOfColumns           int
 	amountOfFloors            int
 	amountOfBasements         int
@@ -12,15 +14,6 @@ type Battery struct {
 	status                    string
 	columnsList               []Column
 	floorRequestButtonList    []FloorRequestButton
-}
-
-func contains(s []int, e int) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
 
 func NewBattery(_id, _amountOfColumns, _amountOfFloors, _amountOfBasements, _amountOfElevatorPerColumn int) *Battery {
@@ -34,23 +27,6 @@ func NewBattery(_id, _amountOfColumns, _amountOfFloors, _amountOfBasements, _amo
 		columnsList:               createColumns(_amountOfColumns, _amountOfFloors, _amountOfBasements, _amountOfElevatorPerColumn),
 		floorRequestButtonList:    createFloorRequestButtons(_amountOfFloors, _amountOfBasements),
 	}
-	/* Fields of the Battery struct
-	battery.ID = _id
-	battery.status = "online"
-	battery.columnsList = make([]Column, _amountOfColumns)
-	battery.floorRequestButtonList = make([]FloorRequestButton, _amountOfColumns)
-
-	// Create request buttons for any below ground floors and create the column(s)
-	if _amountOfBasements > 0 {
-		battery.createBasementFloorRequestButtons(_amountOfBasements)
-		battery.createBasementColumn(_amountOfBasements, _amountOfElevatorPerColumn)
-		_amountOfColumns--
-	}
-
-	battery.createFloorRequestButtons(_amountOfFloors)
-	battery.createColumns(_amountOfColumns, _amountOfFloors, _amountOfBasements, _amountOfElevatorPerColumn)
-
-	return battery */
 }
 
 // Find the best column based on the requested floor
@@ -85,28 +61,13 @@ func (b *Battery) assignElevator(_requestedFloor int, _direction string) (*Colum
 	return chosenColumn, chosenElevator
 }
 
-/* ==== No longer used ====
-func (b *Battery) createBasementColumn(amountOfBasements, elevatorsPerColumn int) {
-	basementServedFloors := make([]int, 0)
-	basementFloor := -1
-
-	// Get the floor levels the column will serve
-	for i := 0; i < amountOfBasements; i++ {
-		servedFloors = append(basementServedFloors, basementFloor)
-		basementFloor++
-	}
-
-	basementColumn := NewColumn(string(b.columnID), elevatorsPerColumn, basementServedFloors, true)
-	b.columnsList = append(b.columnsList, *basementColumn)
-} */
-
 // Create columns, both underground and above ground
 func createColumns(amountOfColumns, amountOfFloors, amountOfBasements, amountOfElevatorsPerColumn int) []Column {
 	columnsList := []Column{}
 	colAmount := amountOfColumns
 	colID := 1
 	// Above-ground variables
-	temp := float64(amountOfFloors) / float64(amountOfColumns)
+	temp := float64(amountOfFloors) / (float64(amountOfColumns) - 1)
 	amountOfFloorsPerColumn := math.Ceil(temp)
 	floor := 1
 	// Below-ground variables
@@ -122,8 +83,9 @@ func createColumns(amountOfColumns, amountOfFloors, amountOfBasements, amountOfE
 			basementFloor--
 		}
 
-		basementColumn := NewColumn(string(colID), amountOfElevatorsPerColumn, basementServedFloors, true)
+		basementColumn := NewColumn(strconv.Itoa(colID), amountOfElevatorsPerColumn, basementServedFloors, true)
 		columnsList = append(columnsList, *basementColumn)
+		isBasementDone = true
 		colID++
 		colAmount--
 	}
@@ -140,25 +102,11 @@ func createColumns(amountOfColumns, amountOfFloors, amountOfBasements, amountOfE
 		}
 
 		// Create a column then add it to the list of columns
-		column := NewColumn(string(colID), amountOfElevatorsPerColumn, servedFloors, false)
+		column := NewColumn(strconv.Itoa(colID), amountOfElevatorsPerColumn, servedFloors, false)
 		columnsList = append(columnsList, *column)
 	}
 	return columnsList
 }
-
-/* ===== No longer used =====
-func (b *Battery) createBasementFloorRequestButtons(amountOfBasements int) {
-	buttonFloor := -1
-	floorRequestButtonID := 1
-
-	// For each basement, create a floor request button
-	for i := 0; i < amountOfBasements; i++ {
-		floorRequestButton := NewFloorRequestButton(floorRequestButtonID, buttonFloor, "down")
-		b.floorRequestButtonList = append(b.floorRequestButtonList, *floorRequestButton)
-		buttonFloor--
-		floorRequestButtonID++
-	}
-} */
 
 func createFloorRequestButtons(amountOfFloors, amountOfBasements int) []FloorRequestButton {
 	buttonsList := []FloorRequestButton{}
